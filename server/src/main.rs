@@ -1,3 +1,8 @@
+mod logger;
+
 fn main() {
-    println!("Hello, world!");
+    info!("Server starting...");
+    warn!("Test warning");
+    error!("Test error");
+    debug!("Debug info");
 }
