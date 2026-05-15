@@ -1,8 +1,16 @@
 mod logger;
+mod network;
+mod protocol;
+mod state;
 
-fn main() {
+use std::sync::Arc;
+use tokio::sync::RwLock;
+
+#[tokio::main]
+async fn main() {
     info!("Server starting...");
-    warn!("Test warning");
-    error!("Test error");
-    debug!("Debug info");
+
+    let game_state = Arc::new(RwLock::new(state::game::GameState::new()));
+
+    network::listener::start("127.0.0.1:4000", game_state).await;
 }
