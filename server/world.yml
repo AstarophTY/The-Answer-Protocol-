@@ -9,6 +9,9 @@ world:
       spawns:
         - npc_type: "guard"
           count: 1
+      items:
+        - "herbs"
+        - "lantern"
 
     tavern:
       name: "The Prancing Pony"
@@ -31,6 +34,16 @@ world:
     ale:
       name: "Frothy Ale"
       description: "A refreshing drink that restores energy."
+      obtainable: true
+
+    herbs:
+      name: "Healing Herbs"
+      description: "A small bundle of fragrant medicinal herbs."
+      obtainable: true
+
+    lantern:
+      name: "Old Lantern"
+      description: "A rusty lantern that still gives a faint light."
       obtainable: true
 
   npcs:

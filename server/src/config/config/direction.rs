@@ -8,3 +8,14 @@ pub enum Direction {
     East,
     West,
 }
+
+impl Direction {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Direction::North => "north",
+            Direction::South => "south",
+            Direction::East => "east",
+            Direction::West => "west",
+        }
+    }
+}

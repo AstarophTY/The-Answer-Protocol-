@@ -40,9 +40,6 @@ pub async fn handle(socket: TcpStream, addr: String, state: Arc<RwLock<GameState
     }
 
     info!("Connection closed: {}", addr);
-    {
-        let mut state = state.write().await;
-        state.players.retain(|_, v| v.addr != addr);
-    }
+    super::handlers::session::disconnect(&addr, state).await;
     let _ = writer_task.await;
 }
