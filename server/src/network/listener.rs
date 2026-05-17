@@ -15,7 +15,7 @@ pub async fn start(addr: &str, state: Arc<RwLock<GameState>>) {
                 info!("New connection from {}", peer_addr);
                 let state = Arc::clone(&state);
                 tokio::spawn(async move {
-                    super::client::handle(socket, peer_addr.to_string(), state).await;
+                    super::handle::handle(socket, peer_addr.to_string(), state).await;
                 });
             }
             Err(e) => {

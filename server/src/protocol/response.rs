@@ -1,7 +1,7 @@
 use serde::Serialize;
 use serde_json::Value;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(tag = "status", rename_all = "lowercase")]
 pub enum Response {
     Ok {

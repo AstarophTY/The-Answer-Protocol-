@@ -5,6 +5,8 @@ pub enum Command {
     Connect { name: String },
     Who,
     Look,
+    Group { action: String },
+    Chat { text: String },
     Unknown(String),
 }
 
@@ -24,6 +26,14 @@ impl Command {
             }
             "WHO" => Ok(Command::Who),
             "LOOK" => Ok(Command::Look),
+            "GROUP" => Ok(Command::Group { action: rest.to_string() }),
+            "CHAT" => {
+                if rest.is_empty() {
+                    Err(Response::error(400, "CHAT requires a message"))
+                } else {
+                    Ok(Command::Chat { text: rest.to_string() })
+                }
+            }
             other => Ok(Command::Unknown(other.to_string())),
         }
     }
