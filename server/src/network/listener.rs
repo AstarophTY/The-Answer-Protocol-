@@ -3,7 +3,7 @@ use tokio::net::TcpListener;
 use tokio::sync::RwLock;
 
 use crate::state::game::GameState;
-use crate::{error, info};
+use tracing::{error, info};
 
 pub async fn start(addr: &str, state: Arc<RwLock<GameState>>) {
     let listener = TcpListener::bind(addr).await.expect("Failed to bind port");

@@ -3,9 +3,12 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpStream;
 use tokio::sync::RwLock;
 
+use serde_json::json;
+
 use crate::protocol::command::Command;
+use crate::protocol::response::Response;
 use crate::state::game::{GameState, Player};
-use crate::{debug, info};
+use tracing::{debug, info};
 
 pub async fn handle(socket: TcpStream, addr: String, state: Arc<RwLock<GameState>>) {
     let (reader, mut writer) = socket.into_split();
@@ -21,12 +24,13 @@ pub async fn handle(socket: TcpStream, addr: String, state: Arc<RwLock<GameState
 
         let response = match Command::parse(&line) {
             Ok(cmd) => dispatch(cmd, &addr, Arc::clone(&state)).await,
-            Err(e) => format!("ERR {}\n", e),
+            Err(e) => e,
         };
 
-        debug!("[{}] >> {}", addr, response.trim_end());
+        let line_out = response.to_line();
+        debug!("[{}] >> {}", addr, line_out.trim_end());
 
-        if writer.write_all(response.as_bytes()).await.is_err() {
+        if writer.write_all(line_out.as_bytes()).await.is_err() {
             break;
         }
     }
@@ -34,42 +38,45 @@ pub async fn handle(socket: TcpStream, addr: String, state: Arc<RwLock<GameState
     info!("Connection closed: {}", addr);
 
     let mut state = state.write().await;
-    state.players.retain(|p| p.addr != addr);
+    state.players.retain(|_, v| v.addr != addr);
 }
 
-async fn dispatch(cmd: Command, addr: &str, state: Arc<RwLock<GameState>>) -> String {
+async fn dispatch(cmd: Command, addr: &str, state: Arc<RwLock<GameState>>) -> Response {
     match cmd {
         Command::Connect { name } => {
             let mut state = state.write().await;
-            if state.players.iter().any(|p| p.name == name) {
-                "ERR Name already taken\n".to_string()
+            if state.players.contains_key(&name) {
+                Response::error(409, "Name already taken")
             } else {
-                state.players.push(Player {
-                    name: name.clone(),
+                let player_name = name.clone();
+
+                state.players.insert(player_name.clone(), Player {
+                    name: player_name,
                     addr: addr.to_string(),
                     room: "start".to_string(),
                 });
+
                 info!("Player '{}' joined", name);
-                format!("OK CONNECT {}\n", name)
+                Response::ok("connect", json!({ "name": name }))
             }
         }
 
         Command::Who => {
             let state = state.read().await;
-            let names: Vec<&str> = state.players.iter().map(|p| p.name.as_str()).collect();
-            if names.is_empty() {
-                "WHO (none)\n".to_string()
-            } else {
-                format!("WHO {}\n", names.join(","))
-            }
+            let names: Vec<&String> = state.players.keys().collect();
+            Response::ok("who", json!({ "players": names }))
         }
 
-        Command::Look => {
-            "LOOK You are in a dark room. Exits: north\n".to_string()
-        }
+        Command::Look => Response::ok(
+            "look",
+            json!({
+                "description": "You are in a dark room.",
+                "exits": ["north"],
+            }),
+        ),
 
         Command::Unknown(raw) => {
-            format!("ERR Unknown command: {}\n", raw)
+            Response::error(404, format!("Unknown command: {}", raw))
         }
     }
 }

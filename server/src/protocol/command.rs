@@ -1,4 +1,5 @@
-/// All commands the server understands. Add variants here as the protocol grows.
+use crate::protocol::response::Response;
+
 #[derive(Debug)]
 pub enum Command {
     Connect { name: String },
@@ -8,15 +9,15 @@ pub enum Command {
 }
 
 impl Command {
-    pub fn parse(line: &str) -> Result<Self, String> {
-        let mut parts = line.splitn(2, ' ');
-        let verb = parts.next().unwrap_or("").to_uppercase();
-        let rest = parts.next().unwrap_or("").trim();
+    pub fn parse(line: &str) -> Result<Self, Response> {
+        let mut parts: std::str::SplitN<'_, char> = line.splitn(2, ' ');
+        let verb: String = parts.next().unwrap_or("").to_uppercase();
+        let rest: &str = parts.next().unwrap_or("").trim();
 
         match verb.as_str() {
             "CONNECT" => {
                 if rest.is_empty() {
-                    Err("CONNECT requires a name".to_string())
+                    Err(Response::error(400, "CONNECT requires a name"))
                 } else {
                     Ok(Command::Connect { name: rest.to_string() })
                 }

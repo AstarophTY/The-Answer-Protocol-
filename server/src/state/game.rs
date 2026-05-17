@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 pub struct Player {
     pub name: String,
     pub addr: String,
@@ -5,13 +7,13 @@ pub struct Player {
 }
 
 pub struct GameState {
-    pub players: Vec<Player>,
+    pub players: HashMap<String, Player>,
 }
 
 impl GameState {
     pub fn new() -> Self {
         GameState {
-            players: Vec::new(),
+            players: HashMap::new(),
         }
     }
 }
